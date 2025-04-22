@@ -10,24 +10,28 @@ const TASKS = [
     id: 1,
     title: "task 1",
     description: "description 1",
+    isEditing: false,
   },
   {
     id: 2,
-    title: "task 1",
-    description: "description 1",
+    title: "task 2",
+    description: "description 2",
+    isEditing: false,
   },
   {
     id: 3,
-    title: "task 1",
-    description: "description 1",
+    title: "task 3",
+    description: "description 3",
+    isEditing: false,
   },
 ];
 
 export const TodoList: FC = () => {
   const [tasks, setTasks] = useState(TASKS);
-  const [listTitle, setListTitle] = useState("ToDo List");
   const [isEditing, setIsEditing] = useState(false);
+  const [listTitle, setListTitle] = useState("ToDo List");
 
+  // Обробник для додавання нової задачі
   function handleAddTask(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -39,11 +43,17 @@ export const TodoList: FC = () => {
 
     setTasks((prev) => [
       ...prev,
-      { title, description, id: prev[prev.length - 1].id + 1 },
+      {
+        title,
+        description,
+        id: prev[prev.length - 1].id + 1,
+        isEditing: false,
+      },
     ]);
     form.reset();
   }
 
+  // Обробник для зміни назви списку
   function handleSaveTitle(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -51,12 +61,27 @@ export const TodoList: FC = () => {
       .value;
     setIsEditing(false);
     setListTitle(listTitle);
+    form.reset();
   }
 
-  function handleCardSave(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    console.log(form);
+  // Обробник для редагування задачі
+  function handleEditTask(id: number) {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, isEditing: !task.isEditing } : task
+      )
+    );
+  }
+
+  // Обробник для збереження змін в задачі
+  function handleSaveTask(id: number, title: string, description: string) {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id
+          ? { ...task, title, description, isEditing: false }
+          : task
+      )
+    );
   }
 
   return (
@@ -94,14 +119,17 @@ export const TodoList: FC = () => {
           <p className="-mt-[8px]">+</p>
         </button>
       </form>
+
       <div className="flex flex-col gap-5 mt-8">
-        {tasks.map(({ description, title, id }) => (
+        {tasks.map(({ id, description, title, isEditing }) => (
           <TaskCard
+            key={id}
             id={id}
             description={description}
             title={title}
-            isEditing={true}
-            handleCardSave={handleCardSave}
+            isEditing={isEditing}
+            handleEdit={() => handleEditTask(id)}
+            handleSave={handleSaveTask}
           />
         ))}
       </div>
