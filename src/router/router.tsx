@@ -3,8 +3,9 @@ import App from "../App";
 import { PrivateRoute } from "./private-route";
 import { RestrictedRoute } from "./restricted-route";
 import { TodoPage } from "../pages/todo-page";
-import { AuthPage } from "../pages/auth-page";
+import { RegisterPage } from "../pages/register-page";
 import { NotFoundPage } from "../pages/not-found-page";
+import { LoginPage } from "../pages/login-page";
 
 export const router = createBrowserRouter([
   {
@@ -14,17 +15,25 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: (
-          //   <PrivateRoute>
-          <TodoPage />
-          //   </PrivateRoute>
+          <PrivateRoute>
+            <TodoPage />
+          </PrivateRoute>
         ),
       },
       {
-        path: "/auth",
+        path: "/register",
         element: (
-          //   <RestrictedRoute>
-          <AuthPage />
-          //   </RestrictedRoute>
+          <RestrictedRoute>
+            <RegisterPage />
+          </RestrictedRoute>
+        ),
+      },
+      {
+        path: "/login",
+        element: (
+          <RestrictedRoute>
+            <LoginPage />
+          </RestrictedRoute>
         ),
       },
       {

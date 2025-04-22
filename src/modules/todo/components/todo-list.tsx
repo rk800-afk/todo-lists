@@ -84,6 +84,7 @@ export const TodoList: FC = () => {
     );
   }
 
+  //Обробник для видалення задачі
   function handleDeleteTask(id: number) {
     setTasks((prev) => prev.filter((task) => task.id !== id));
   }
@@ -138,7 +139,7 @@ export const TodoList: FC = () => {
             isEditing={isEditing}
             handleEdit={() => handleEditTask(id)}
             handleSave={handleSaveTask}
-            handleDeleteTask={handleDeleteTask}
+            handleDeleteTask={() => handleDeleteTask(id)}
           />
         ))}
       </div>

@@ -11,7 +11,7 @@ interface TaskCardProps {
   isEditing: boolean;
   handleEdit: () => void;
   handleSave: (id: number, title: string, description: string) => void;
-  handleDeleteTask: (id: number) => void;
+  handleDeleteTask: () => void;
 }
 
 export const TaskCard: FC<TaskCardProps> = ({
@@ -45,7 +45,7 @@ export const TaskCard: FC<TaskCardProps> = ({
         </button>
         <button
           className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
-          onClick={() => handleDeleteTask(id)}
+          onClick={handleDeleteTask}
         >
           <DeleteIcon />
         </button>
