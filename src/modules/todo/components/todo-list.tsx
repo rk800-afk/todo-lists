@@ -46,7 +46,7 @@ export const TodoList: FC = () => {
       {
         title,
         description,
-        id: prev[prev.length - 1].id + 1,
+        id: prev[prev.length - 1]?.id ? prev[prev.length - 1].id + 1 : 0,
         isEditing: false,
       },
     ]);
@@ -84,6 +84,10 @@ export const TodoList: FC = () => {
     );
   }
 
+  function handleDeleteTask(id: number) {
+    setTasks((prev) => prev.filter((task) => task.id !== id));
+  }
+
   return (
     <div className="w-[500px] bg-white rounded-[10px] p-[20px]">
       <div className="flex justify-end gap-3">
@@ -101,7 +105,11 @@ export const TodoList: FC = () => {
         <p className="text-2xl text-center font-bold mb-5">{listTitle}</p>
       ) : (
         <form className="flex flex-col gap-3 my-5" onSubmit={handleSaveTitle}>
-          <UiInput name="listTitle" placeholder="Enter new list title" />
+          <UiInput
+            name="listTitle"
+            placeholder="Enter new list title"
+            defaultValue={listTitle}
+          />
           <UiSaveBtn />
         </form>
       )}
@@ -130,6 +138,7 @@ export const TodoList: FC = () => {
             isEditing={isEditing}
             handleEdit={() => handleEditTask(id)}
             handleSave={handleSaveTask}
+            handleDeleteTask={handleDeleteTask}
           />
         ))}
       </div>
