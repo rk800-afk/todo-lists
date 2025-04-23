@@ -5,6 +5,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { fetchUserTodoLists } from "../../features/todo/todoThunks";
 import { useAppDispatch } from "../../hooks/useAppDispatch";
+import { Task } from "../../features/todo/types";
 
 // const TASKS = [
 //   {
@@ -49,9 +50,10 @@ export const TodoLists: FC = () => {
       <div className="flex justify-center gap-10 flex-wrap">
         {todoLists.map((list) => (
           <TodoList
+            listId={list.id}
             key={list.id}
             title={list.title}
-            tasks={(list.tasks ?? []).map((task: any) => ({
+            tasks={(list.tasks ?? []).map((task: Task) => ({
               id: task.id,
               title: task.title,
               description: task.description ?? "",

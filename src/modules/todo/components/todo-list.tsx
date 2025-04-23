@@ -4,9 +4,25 @@ import { DeleteIcon } from "../../../ui/icons/delete-icon";
 import { UiInput } from "../../../ui/ui-input";
 import { TaskCard } from "./task-card";
 import { UiSaveBtn } from "../../../ui/ui-save-btn";
+import { updateTodoListTitle } from "../../../firebase/api/update-todo-list";
+import {
+  addTaskToList,
+  deleteList,
+  deleteTaskFromList,
+  toggleTaskCompletedInList,
+  updateTaskInList,
+  updateTodoListTitleRedux,
+} from "../../../features/todo/todoSlice";
+import { useAppDispatch } from "../../../hooks/useAppDispatch";
+import { addTask } from "../../../firebase/api/add-task";
+import { updateTask } from "../../../firebase/api/update-task";
+import { deleteTask } from "../../../firebase/api/delete-task-from-list";
+import { toggleTaskCompleted } from "../../../firebase/api/toggle-task-completed";
+import { deleteListFromFirestore } from "../../../firebase/api/delete-list";
 
 interface TodoListProps {
   title: string;
+  listId: string;
   tasks: {
     id: string;
     title: string;
@@ -16,12 +32,14 @@ interface TodoListProps {
   }[];
 }
 
-export const TodoList: FC<TodoListProps> = ({ title, tasks }) => {
+export const TodoList: FC<TodoListProps> = ({ title, tasks, listId }) => {
   const [currentTasks, setCurrentTasks] = useState(tasks);
   const [isEditing, setIsEditing] = useState(false);
   const [listTitle, setListTitle] = useState(title);
 
-  function handleAddTask(e: React.FormEvent<HTMLFormElement>) {
+  const dispatch = useAppDispatch();
+
+  async function handleAddTask(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
 
@@ -30,28 +48,34 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks }) => {
       form.elements.namedItem("description") as HTMLInputElement
     ).value;
 
-    setCurrentTasks((prev) => [
-      ...prev,
-      {
-        title,
-        description,
-        id: crypto.randomUUID(),
-        isEditing: false,
-        completed: false,
-      },
-    ]);
-    form.reset();
+    try {
+      const task = await addTask({ listId, title, description });
+
+      dispatch(addTaskToList({ listId, task }));
+
+      setCurrentTasks((prev) => [...prev, task]);
+
+      form.reset();
+    } catch (error) {
+      console.error("Помилка при додаванні завдання:", error);
+    }
   }
 
-  function handleSaveTitle(e: React.FormEvent<HTMLFormElement>) {
+  const handleSaveTitle = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
-    const listTitle = (form.elements.namedItem("listTitle") as HTMLInputElement)
+    const newTitle = (form.elements.namedItem("listTitle") as HTMLInputElement)
       .value;
-    setIsEditing(false);
-    setListTitle(listTitle);
-    form.reset();
-  }
+    try {
+      await updateTodoListTitle(listId, newTitle);
+      dispatch(updateTodoListTitleRedux({ listId, newTitle }));
+      setListTitle(newTitle);
+    } catch (error) {
+      console.error("Помилка оновлення назви списку:", error);
+    } finally {
+      setIsEditing(false);
+    }
+  };
 
   function handleEditTask(id: string) {
     setCurrentTasks((prevTasks) =>
@@ -61,26 +85,67 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks }) => {
     );
   }
 
-  function handleIsCompleted(id: string) {
-    setCurrentTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+  async function handleIsCompleted(taskId: string, currentCompleted: boolean) {
+    try {
+      await toggleTaskCompleted(listId, taskId, !currentCompleted);
+      dispatch(toggleTaskCompletedInList({ listId, taskId }));
+      setCurrentTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, completed: !task.completed } : task
+        )
+      );
+    } catch (err) {
+      console.error("Failed to toggle task status:", err);
+    }
   }
 
-  function handleSaveTask(id: string, title: string, description: string) {
-    setCurrentTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id
-          ? { ...task, title, description, isEditing: false }
-          : task
-      )
-    );
+  async function handleSaveTask(
+    id: string,
+    title: string,
+    description: string
+  ) {
+    try {
+      const updatedTask = await updateTask({
+        listId,
+        taskId: id,
+        title,
+        description,
+      });
+
+      dispatch(updateTaskInList({ listId, task: updatedTask }));
+
+      setCurrentTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === id
+            ? { ...task, title, description, isEditing: false }
+            : task
+        )
+      );
+    } catch (error) {
+      console.error("Помилка при збереженні завдання:", error);
+    }
   }
 
-  function handleDeleteTask(id: string) {
-    setCurrentTasks((prev) => prev.filter((task) => task.id !== id));
+  async function handleDeleteTask(taskId: string) {
+    try {
+      deleteTask(listId, taskId);
+      dispatch(deleteTaskFromList({ listId, taskId }));
+
+      setCurrentTasks((prev) => prev.filter((task) => task.id !== taskId));
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
+  }
+
+  async function handleDeleteList(listId: string) {
+    try {
+      await deleteListFromFirestore(listId);
+
+      dispatch(deleteList(listId));
+      console.log("List deleted successfully");
+    } catch (err) {
+      console.error("Failed to delete list:", err);
+    }
   }
 
   return (
@@ -92,7 +157,10 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks }) => {
         >
           <EditIcon />
         </button>
-        <button className="text-black w-8 h-8 cursor-pointer transition-transform duration-300 transform hover:scale-110">
+        <button
+          onClick={() => handleDeleteList(listId)}
+          className="text-black w-8 h-8 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+        >
           <DeleteIcon />
         </button>
       </div>
@@ -133,7 +201,7 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks }) => {
               title={title}
               isEditing={isEditing}
               isCompleted={completed}
-              handleIsCompleted={() => handleIsCompleted(id)}
+              handleIsCompleted={() => handleIsCompleted(id, completed)}
               handleEdit={() => handleEditTask(id)}
               handleSave={handleSaveTask}
               handleDeleteTask={() => handleDeleteTask(id)}
