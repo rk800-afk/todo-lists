@@ -7,30 +7,6 @@ import { fetchUserTodoLists } from "../../features/todo/todoThunks";
 import { useAppDispatch } from "../../hooks/useAppDispatch";
 import { Task } from "../../features/todo/types";
 
-// const TASKS = [
-//   {
-//     id: "1",
-//     title: "task 1",
-//     description: "description 1",
-//     isEditing: false,
-//     completed: false,
-//   },
-//   {
-//     id: "2",
-//     title: "task 2",
-//     description: "description 2",
-//     isEditing: false,
-//     completed: false,
-//   },
-//   {
-//     id: "3",
-//     title: "task 3",
-//     description: "description 3",
-//     isEditing: false,
-//     completed: false,
-//   },
-// ];
-
 export const TodoLists: FC = () => {
   const dispatch = useAppDispatch();
   const currentUser = useSelector((state: RootState) => state.user.currentUser);

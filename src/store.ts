@@ -1,4 +1,3 @@
-// src/app/store.ts
 import { configureStore } from '@reduxjs/toolkit'
 import userReducer from './features/user/userSlice'
 import todoReducer  from './features/todo/todoSlice'

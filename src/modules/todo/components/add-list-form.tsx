@@ -31,7 +31,7 @@ export function AddListForm() {
       });
 
       console.log("Список створено з ID:", listId);
-      form.reset(); // очищення форми
+      form.reset();
       dispatch(fetchUserTodoLists(currentUser!.uid));
     } catch (error) {
       console.error("Помилка створення списку:", error);

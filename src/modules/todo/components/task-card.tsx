@@ -10,6 +10,7 @@ interface TaskCardProps {
   description: string;
   isEditing: boolean;
   isCompleted: boolean;
+  isAdmin: boolean;
   handleIsCompleted: () => void;
   handleEdit: () => void;
   handleSave: (id: string, title: string, description: string) => void;
@@ -22,6 +23,7 @@ export const TaskCard: FC<TaskCardProps> = ({
   description,
   isEditing,
   isCompleted,
+  isAdmin,
   handleIsCompleted,
   handleEdit,
   handleSave,
@@ -50,21 +52,24 @@ export const TaskCard: FC<TaskCardProps> = ({
           ></button>
           <p>{isCompleted ? "Completed" : "In work"}</p>
         </div>
-        <div className="flex gap-2 items-center">
-          <button
-            onClick={handleEdit}
-            className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
-          >
-            <EditIcon />
-          </button>
-          <button
-            className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
-            onClick={handleDeleteTask}
-          >
-            <DeleteIcon />
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={handleEdit}
+              className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+            >
+              <EditIcon />
+            </button>
+            <button
+              className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+              onClick={handleDeleteTask}
+            >
+              <DeleteIcon />
+            </button>
+          </div>
+        )}
       </div>
+
       {!isEditing ? (
         <>
           <p className="mb-2 text-xl">{title}</p>

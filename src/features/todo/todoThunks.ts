@@ -1,11 +1,7 @@
-// src/features/todo/todoThunks.ts
-
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import {
   collection,
   getDocs,
-  query,
-  where,
 } from 'firebase/firestore'
 
 import { Task, TodoList } from './types'
@@ -15,31 +11,50 @@ export const fetchUserTodoLists = createAsyncThunk(
   'todo/fetchUserTodoLists',
   async (userId: string): Promise<TodoList[]> => {
     const listsRef = collection(firestore, 'todoLists')
-    const q = query(listsRef, where('ownerId', '==', userId))
-    const querySnapshot = await getDocs(q)
+    
+    try {
+      const todoLists: TodoList[] = []
+      
+      const todoListsSnapshot = await getDocs(listsRef)
 
-    const todoLists: TodoList[] = []
+      for (const listDoc of todoListsSnapshot.docs) {
+        const listData = listDoc.data()
+        const listId = listDoc.id
 
-    for (const listDoc of querySnapshot.docs) {
-      const listData = listDoc.data()
-      const listId = listDoc.id
+        const participantsRef = collection(firestore, 'todoLists', listId, 'participants')
+        const participantsSnapshot = await getDocs(participantsRef)
 
-      const tasksRef = collection(firestore, 'todoLists', listId, 'tasks')
-      const tasksSnapshot = await getDocs(tasksRef)
+        let isParticipant = false
 
-      const tasks: Task[] = tasksSnapshot.docs.map((taskDoc) => ({
-        id: taskDoc.id,
-        ...(taskDoc.data() as Omit<Task, 'id'>),
-      }))
+        participantsSnapshot.forEach((participantDoc) => {
+          const participantData = participantDoc.data()
+          if (participantData.userId === userId) {
+            isParticipant = true
+          }
+        })
 
-      todoLists.push({
-        id: listId,
-        title: listData.title,
-        ownerId: listData.ownerId,
-        tasks,
-      })
+        if (isParticipant) {
+          const tasksRef = collection(firestore, 'todoLists', listId, 'tasks')
+          const tasksSnapshot = await getDocs(tasksRef)
+
+          const tasks: Task[] = tasksSnapshot.docs.map((taskDoc) => ({
+            id: taskDoc.id,
+            ...(taskDoc.data() as Omit<Task, 'id'>),
+          }))
+
+          todoLists.push({
+            id: listId,
+            title: listData.title,
+            ownerId: listData.ownerId,
+            tasks,
+          })
+        }
+      }
+
+      return todoLists
+    } catch (err) {
+      console.error('Failed to fetch user todo lists:', err)
+      return []
     }
-
-    return todoLists
   }
 )
