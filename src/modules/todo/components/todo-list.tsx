@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { EditIcon } from "../../../ui/icons/edit-icon";
 import { DeleteIcon } from "../../../ui/icons/delete-icon";
 import { UiInput } from "../../../ui/ui-input";
@@ -19,6 +19,9 @@ import { updateTask } from "../../../firebase/api/update-task";
 import { deleteTask } from "../../../firebase/api/delete-task-from-list";
 import { toggleTaskCompleted } from "../../../firebase/api/toggle-task-completed";
 import { deleteListFromFirestore } from "../../../firebase/api/delete-list";
+import { Participant } from "../../../features/todo/types";
+import { getParticipants } from "../../../firebase/api/get-participants";
+import { addParticipant } from "../../../firebase/api/add-participant";
 
 interface TodoListProps {
   title: string;
@@ -36,6 +39,23 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks, listId }) => {
   const [currentTasks, setCurrentTasks] = useState(tasks);
   const [isEditing, setIsEditing] = useState(false);
   const [listTitle, setListTitle] = useState(title);
+  const [isEditingMembers, setIsEditingMembers] = useState(false);
+  const [members, setMembers] = useState<Participant[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!isEditingMembers) return;
+
+    const fetchParticipants = async () => {
+      const participants = await getParticipants(listId);
+      if (participants) {
+        setMembers(participants);
+      }
+    };
+
+    fetchParticipants();
+  }, [isEditingMembers]);
 
   const dispatch = useAppDispatch();
 
@@ -85,6 +105,10 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks, listId }) => {
     );
   }
 
+  function handleEditMembers() {
+    setIsEditingMembers((prev) => !prev);
+  }
+
   async function handleIsCompleted(taskId: string, currentCompleted: boolean) {
     try {
       await toggleTaskCompleted(listId, taskId, !currentCompleted);
@@ -122,7 +146,7 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks, listId }) => {
         )
       );
     } catch (error) {
-      console.error("Помилка при збереженні завдання:", error);
+      console.error("Error saving task:", error);
     }
   }
 
@@ -148,21 +172,78 @@ export const TodoList: FC<TodoListProps> = ({ title, tasks, listId }) => {
     }
   }
 
+  const handleCreateParticipant = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+
+    const email = (
+      form.elements.namedItem("addMemberInput") as HTMLInputElement
+    ).value;
+
+    if (!email) {
+      setError("Please enter email");
+      return;
+    }
+    setError(null); // очистити попередні помилки
+    try {
+      const response = await addParticipant(listId, email);
+      if (response.success) {
+        setSuccess(true);
+        if (response.participant) {
+          setMembers((prev) => [...prev, response.participant]);
+        }
+      } else {
+        setError(response.error);
+      }
+    } catch (err) {
+      setError("An error occurred while adding a participant.");
+      console.error("Error adding participant:", err);
+    }
+  };
+
   return (
-    <div className="w-[500px] bg-white rounded-[10px] p-[20px]">
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={() => setIsEditing((prev) => !prev)}
-          className="text-black w-8 h-8 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+    <div className="w-[500px] bg-white rounded-[10px] p-[20px] relative">
+      {isEditingMembers && (
+        <form
+          onSubmit={handleCreateParticipant}
+          className="absolute bottom-0 left-0 right-0 bg-white flex flex-col justify-center gap-5 p-8 border-5 border-solid border-black rounded-[10px]"
         >
-          <EditIcon />
-        </button>
+          {members.map((member) => (
+            <div key={member.id}>
+              {member.email} - {member.role}
+            </div>
+          ))}
+          <UiInput name="addMemberInput" placeholder="Enter new member email" />
+          <UiSaveBtn btnText="Add member" />
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          {success && (
+            <p style={{ color: "green" }}>Учасник успішно доданий!</p>
+          )}
+        </form>
+      )}
+      <div className="flex justify-between gap-3 items-center">
         <button
-          onClick={() => handleDeleteList(listId)}
-          className="text-black w-8 h-8 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+          onClick={handleEditMembers}
+          className="bg-green-600 px-3 py-1 cursor-pointer rounded-[10px]"
         >
-          <DeleteIcon />
+          Members
         </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setIsEditing((prev) => !prev)}
+            className="text-black w-8 h-8 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+          >
+            <EditIcon />
+          </button>
+          <button
+            onClick={() => handleDeleteList(listId)}
+            className="text-black w-8 h-8 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+          >
+            <DeleteIcon />
+          </button>
+        </div>
       </div>
       {!isEditing ? (
         <p className="text-2xl text-center font-bold mb-5">{listTitle}</p>

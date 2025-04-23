@@ -11,3 +11,10 @@ export interface Task {
     ownerId: string
     tasks: Task[]
   }
+
+  export interface Participant {
+    id: string;
+    userId: string;
+    email: string;
+    role: string;
+  }
