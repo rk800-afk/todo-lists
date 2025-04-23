@@ -5,33 +5,22 @@ import { UiInput } from "../../../ui/ui-input";
 import { TaskCard } from "./task-card";
 import { UiSaveBtn } from "../../../ui/ui-save-btn";
 
-const TASKS = [
-  {
-    id: 1,
-    title: "task 1",
-    description: "description 1",
-    isEditing: false,
-  },
-  {
-    id: 2,
-    title: "task 2",
-    description: "description 2",
-    isEditing: false,
-  },
-  {
-    id: 3,
-    title: "task 3",
-    description: "description 3",
-    isEditing: false,
-  },
-];
+interface TodoListProps {
+  title: string;
+  tasks: {
+    id: string;
+    title: string;
+    description: string;
+    completed: boolean;
+    isEditing: boolean;
+  }[];
+}
 
-export const TodoList: FC = () => {
-  const [tasks, setTasks] = useState(TASKS);
+export const TodoList: FC<TodoListProps> = ({ title, tasks }) => {
+  const [currentTasks, setCurrentTasks] = useState(tasks);
   const [isEditing, setIsEditing] = useState(false);
-  const [listTitle, setListTitle] = useState("ToDo List");
+  const [listTitle, setListTitle] = useState(title);
 
-  // Обробник для додавання нової задачі
   function handleAddTask(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -41,19 +30,19 @@ export const TodoList: FC = () => {
       form.elements.namedItem("description") as HTMLInputElement
     ).value;
 
-    setTasks((prev) => [
+    setCurrentTasks((prev) => [
       ...prev,
       {
         title,
         description,
-        id: prev[prev.length - 1]?.id ? prev[prev.length - 1].id + 1 : 0,
+        id: crypto.randomUUID(),
         isEditing: false,
+        completed: false,
       },
     ]);
     form.reset();
   }
 
-  // Обробник для зміни назви списку
   function handleSaveTitle(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -64,18 +53,24 @@ export const TodoList: FC = () => {
     form.reset();
   }
 
-  // Обробник для редагування задачі
-  function handleEditTask(id: number) {
-    setTasks((prevTasks) =>
+  function handleEditTask(id: string) {
+    setCurrentTasks((prevTasks) =>
       prevTasks.map((task) =>
         task.id === id ? { ...task, isEditing: !task.isEditing } : task
       )
     );
   }
 
-  // Обробник для збереження змін в задачі
-  function handleSaveTask(id: number, title: string, description: string) {
-    setTasks((prevTasks) =>
+  function handleIsCompleted(id: string) {
+    setCurrentTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
+    );
+  }
+
+  function handleSaveTask(id: string, title: string, description: string) {
+    setCurrentTasks((prevTasks) =>
       prevTasks.map((task) =>
         task.id === id
           ? { ...task, title, description, isEditing: false }
@@ -84,9 +79,8 @@ export const TodoList: FC = () => {
     );
   }
 
-  //Обробник для видалення задачі
-  function handleDeleteTask(id: number) {
-    setTasks((prev) => prev.filter((task) => task.id !== id));
+  function handleDeleteTask(id: string) {
+    setCurrentTasks((prev) => prev.filter((task) => task.id !== id));
   }
 
   return (
@@ -130,18 +124,22 @@ export const TodoList: FC = () => {
       </form>
 
       <div className="flex flex-col gap-5 mt-8">
-        {tasks.map(({ id, description, title, isEditing }) => (
-          <TaskCard
-            key={id}
-            id={id}
-            description={description}
-            title={title}
-            isEditing={isEditing}
-            handleEdit={() => handleEditTask(id)}
-            handleSave={handleSaveTask}
-            handleDeleteTask={() => handleDeleteTask(id)}
-          />
-        ))}
+        {currentTasks.map(
+          ({ id, description, title, completed, isEditing }) => (
+            <TaskCard
+              key={id}
+              id={id}
+              description={description}
+              title={title}
+              isEditing={isEditing}
+              isCompleted={completed}
+              handleIsCompleted={() => handleIsCompleted(id)}
+              handleEdit={() => handleEditTask(id)}
+              handleSave={handleSaveTask}
+              handleDeleteTask={() => handleDeleteTask(id)}
+            />
+          )
+        )}
       </div>
     </div>
   );

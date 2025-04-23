@@ -5,12 +5,14 @@ import { UiInput } from "../../../ui/ui-input";
 import { UiSaveBtn } from "../../../ui/ui-save-btn";
 
 interface TaskCardProps {
-  id: number;
+  id: string;
   title: string;
   description: string;
   isEditing: boolean;
+  isCompleted: boolean;
+  handleIsCompleted: () => void;
   handleEdit: () => void;
-  handleSave: (id: number, title: string, description: string) => void;
+  handleSave: (id: string, title: string, description: string) => void;
   handleDeleteTask: () => void;
 }
 
@@ -19,6 +21,8 @@ export const TaskCard: FC<TaskCardProps> = ({
   title,
   description,
   isEditing,
+  isCompleted,
+  handleIsCompleted,
   handleEdit,
   handleSave,
   handleDeleteTask,
@@ -36,19 +40,30 @@ export const TaskCard: FC<TaskCardProps> = ({
 
   return (
     <div className="bg-gray-300 p-5 rounded-[10px]">
-      <div className="flex justify-end gap-2">
-        <button
-          onClick={handleEdit}
-          className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
-        >
-          <EditIcon />
-        </button>
-        <button
-          className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
-          onClick={handleDeleteTask}
-        >
-          <DeleteIcon />
-        </button>
+      <div className="flex justify-between">
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={handleIsCompleted}
+            className={`w-[20px] h-[20px] rounded-[3px] bg-${
+              isCompleted ? "green-700" : "gray-400"
+            }`}
+          ></button>
+          <p>{isCompleted ? "Completed" : "In work"}</p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <button
+            onClick={handleEdit}
+            className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+          >
+            <EditIcon />
+          </button>
+          <button
+            className="text-black w-5 h-5 cursor-pointer transition-transform duration-300 transform hover:scale-110"
+            onClick={handleDeleteTask}
+          >
+            <DeleteIcon />
+          </button>
+        </div>
       </div>
       {!isEditing ? (
         <>

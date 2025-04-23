@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { auth, firestore } from "../../firebaseConfig";
+import { auth, firestore } from "../../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { UiSaveBtn } from "../../ui/ui-save-btn";

@@ -1,11 +1,12 @@
 import { signOut } from "firebase/auth";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "../../firebaseConfig";
+import { RootState } from "../../store";
+import { auth } from "../../firebase/firebaseConfig";
 
 export function Header() {
-  const [user] = useAuthState(auth);
   const navigate = useNavigate();
+  const currentUser = useSelector((state: RootState) => state.user.currentUser);
 
   const handleLogout = async () => {
     try {
@@ -19,8 +20,8 @@ export function Header() {
 
   return (
     <header className="h-[100px] bg-gray-400 flex items-center justify-between px-4">
-      <h1 className="text-xl font-bold">ToDo Lists</h1>
-      {user && (
+      <h1 className="text-xl font-bold">Hello {currentUser?.email}</h1>
+      {currentUser && (
         <button
           onClick={handleLogout}
           className="bg-red-500 text-white py-2 px-4 hover:bg-red-600 transition rounded-[10px] cursor-pointer"

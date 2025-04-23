@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../firebaseConfig";
+import { auth } from "../../firebase/firebaseConfig";
 import { UiSaveBtn } from "../../ui/ui-save-btn";
 import { AuthInput } from "../../components/auth/auth-input";
 import { AuthFormWrapper } from "../../components/auth/auth-form-wrapper";
